@@ -15,8 +15,8 @@
 
 
 #Hypothesis we are testing:
-#H0: |Delta|<0.15 
-#Ha: |Delta|>0.15 
+#H0: Delta=0 
+#Ha: Delta =/= 0
 
 
 
