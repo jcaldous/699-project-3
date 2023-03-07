@@ -4,7 +4,7 @@ trial_sim_2stg <- function(n_sim, #number of simulations
                                 pA,  #probability in arm 1
                                 pB,  #probability in arm 2
                                 alpha_int, #interim alpha level
-                                alpha_fin,
+                                alpha_fin, #final alpha level
                                 seed = sample(.Machine$integer.max, 1)) {
   set.seed(seed)
   start_sim = Sys.time();

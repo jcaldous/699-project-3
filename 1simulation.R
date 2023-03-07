@@ -68,11 +68,7 @@ for (i in 59:200){
     print(paste(i,"0.8 not reached:",S_t))
   }
   }
-check.pwr<-trial_sim_2stg(10000,118,118,assumed_pA,assumed_pB,0.01,alpha_fin)
-S_t <-mean(check.pwr$decision)#power 0.92 (too small)
-S_t +qnorm(c(0.025,0.975)) * sqrt(S_t * (1-S_t) / 10000) #little underpowered
-
-check.alp<-trial_sim_2stg(10000,118,118,assumed_pA,assumed_pA,0.01,alpha_fin)
+check.alp<-trial_sim_2stg(1000,86,86,assumed_pA,assumed_pA,0.01,alpha_fin)
 S_t <-mean(check.alp$decision)#alpha=0.1139
-S_t +qnorm(c(0.025,0.975)) * sqrt(S_t * (1-S_t) / 10000) #type 1 error is too low
+S_t +qnorm(c(0.025,0.975)) * sqrt(S_t * (1-S_t) / 1000) #type 1 error is too low
 #####
