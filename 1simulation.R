@@ -45,16 +45,16 @@ required_n_A <-
 required_n_B <- ratio_n_B_n_A * required_n_A;
 alpha_fin=(0.05-alpha_int)*(1-alpha_int);
 
-check.pwr<-trial_sim_2stg(10000,118/2,118/2,assumed_pA,assumed_pB,0.01)
+check.pwr<-trial_sim_2stg(10000,118/2,118/2,assumed_pA,assumed_pB,0.01,alpha_fin)
 mean(check.pwr$decision)#power 0.67 (too small)
 
-check.alp<-trial_sim_2stg(10000,118/2,118/2,assumed_pA,assumed_pA,0.01)
+check.alp<-trial_sim_2stg(10000,118/2,118/2,assumed_pA,assumed_pA,0.01,alpha_fin)
 mean(check.alp$decision)# 0.03 (too small)
 #####
 #####
 #what do we need to get a power of 0.8?
 for (i in 59:200){
-  check.pwr<-trial_sim_2stg(1000,i,i,assumed_pA,assumed_pB,0.01)
+  check.pwr<-trial_sim_2stg(1000,i,i,assumed_pA,assumed_pB,0.01,alpha_fin)
   S_t <-mean(check.pwr$decision)#power 0.92 (too small)
   if (S_t>=0.8){
     print(
@@ -68,11 +68,11 @@ for (i in 59:200){
     print(paste(i,"0.8 not reached:",S_t))
   }
   }
-check.pwr<-trial_sim_2stg(10000,118,118,assumed_pA,assumed_pB,0.01)
+check.pwr<-trial_sim_2stg(10000,118,118,assumed_pA,assumed_pB,0.01,alpha_fin)
 S_t <-mean(check.pwr$decision)#power 0.92 (too small)
 S_t +qnorm(c(0.025,0.975)) * sqrt(S_t * (1-S_t) / 10000) #little underpowered
 
-check.alp<-trial_sim_2stg(10000,118,118,assumed_pA,assumed_pA,0.01)
+check.alp<-trial_sim_2stg(10000,118,118,assumed_pA,assumed_pA,0.01,alpha_fin)
 S_t <-mean(check.alp$decision)#alpha=0.1139
 S_t +qnorm(c(0.025,0.975)) * sqrt(S_t * (1-S_t) / 10000) #type 1 error is too low
 #####
