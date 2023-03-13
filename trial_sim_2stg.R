@@ -52,19 +52,30 @@ trial_sim_2stg <- function(n_sim, #number of simulations
     pvalues_stg2_z = 2 * pnorm(q = abs(z_stat_2), 
                              lower.tail = FALSE)
     pvalues_stg2_quant= ifelse(pvalues_stg1_z < alpha_int, NA,pvalues_stg2_z)
+    
+    stopped_int=pvalues_stg1_z < alpha_int;
+    pvalues_stg1=pvalues_stg1_z;
+    pvalues_stg2=pvalues_stg2_z;
+    pvalues_stg2_quant=pvalues_stg2_quant;
+    decision_1=pvalues_stg1_z<alpha_int;
+    decision_2=pvalues_stg2_z<alpha_fin;
+    pvalues_z = pvalues_stg2_z*I(pvalues_stg1_z < alpha_int)+ 
+      pvalues_stg1_z*(1-I(pvalues_stg1_z < alpha_int));
+    dec_z = (z_stat)*stopped_int+ 
+      (z_stat_2)*(1-stopped_int);
+    decision = (pvalues_stg1<alpha_int)*I(pvalues_stg1 < alpha_int)+ 
+      (pvalues_stg2<alpha_fin)*(1-I(pvalues_stg1 < alpha_int));
+    
     return(list(alphas=c(alpha_int,alpha_fin),
-                stopped_int=pvalues_stg1_z < alpha_int,
-                pvalues_stg1=pvalues_stg1_z,
-                pvalues_stg2=pvalues_stg2_z,
+                stopped_int=stopped_int,
+                pvalues_stg1=pvalues_stg1,
+                pvalues_stg2=pvalues_stg2,
                 pvalues_stg2_quant=pvalues_stg2_quant,
-                decision_1=pvalues_stg1_z<alpha_int,
-                decision_2=pvalues_stg2_z<alpha_fin,
-                pvalues_z = pvalues_stg2_z*I(pvalues_stg1_z < alpha_int)+ 
-                  pvalues_stg1_z*(1-I(pvalues_stg1_z < alpha_int)),
-                dec_z = (z_stat)*stopped_int+ 
-                  (z_stat_2)*(1-stopped_int),
-                decision = (pvalues_stg1<alpha_int)*I(pvalues_stg1 < alpha_int)+ 
-                  (pvalues_stg2<alpha_fin)*(1-I(pvalues_stg1 < alpha_int)),
+                decision_1=decision_1,
+                decision_2=decision_2,
+                pvalues_z = pvalues_z,
+                dec_z = dec_z,
+                decision = decision,
                 # decision= (pvalues_stg1_t<alpha_int)*stopped_int+ 
                 #   (pvalues_stg2_t<alpha_fin)*(1-stopped_int),
                 runtime = Sys.time() - start_sim
