@@ -51,9 +51,9 @@ S_con
 moe=0.001
 S_H0= (qnorm(0.975)/moe)**2 *(.05)*(.95)
 S_H0 #~2e5
-(qnorm(0.975)/(moe/2))**2 *(.05)*(.95)# smaller moe since t1e is so small
 #1825; 7298
 #Under alternative: p=0.8
+moe=0.01
 S_HA= (qnorm(0.975)/moe)**2 *(.8)*(.2)
 S_HA
 #6147
@@ -88,38 +88,33 @@ for (i in 59:118){
 #####what alpha_fin do we need to get a type 1 of about 0.05?#####
 t1e.dat<-data.frame(nsim=numeric(0),n_stg=numeric(0),S_t=numeric(0))
 
-for(j in 1:1e3){
+for(i in 1:500){
+sim<-trial_sim_2stg(nsim,66,66,assumed_pA,assumed_pA,alpha_int,alpha_fin) 
+for(j in seq(0.030,0.035,0.001)){
   start_sim = Sys.time()
-  sim<-trial_sim_2stg(nsim,66,66,assumed_pA,assumed_pA,alpha_int,alpha_fin) #run sim
-  new.alpha.fin<-quantile(sim$pvalues_stg2_quant, probs=c(alpha_fin), na.rm=T) #get new alpha
-  new.decision<-(check.alp$pvalues_stg1<alpha_int)*I(check.alp$pvalues_stg1 < alpha_int)+ 
-    (check.alp$pvalues_stg2<new.alpha.fin)*(1-I(check.alp$pvalues_stg1 < alpha_int));
+  new.decision<-(sim$pvalues_stg1<alpha_int)*I(sim$pvalues_stg1 < alpha_int)+ 
+    (sim$pvalues_stg2<j)*(1-I(sim$pvalues_stg1 < alpha_int));
       check.t1e<-mean(new.decision, na.rm = T) #check t1e
-      dat_add<-data.frame(nsim=j,alpha.fin=new.alpha.fin,S_t=check.t1e)%>%mutate(flag=(S_t>0.045 & S_t<0.05));
-      t1e.dat<-rbind(t1e.dat,dat_add)
-      # print(
-      #   list(n_stg=i,
-      #        S_t=S_t,
-      #        CI=S_t +qnorm(c(0.025,0.975)) * sqrt(S_t * (1-S_t) / nsim)
-      #        )
-      # )
-      if (j %% 100 == 0){
-        print(paste("nsim",j/1e3 *100,"%"))
-      }
+  if (check.t1e>0.047 & check.t1e<0.05){
+    dat_add<-data.frame(nsim=j,alpha.fin=j,S_t=check.t1e);
+    t1e.dat<-rbind(t1e.dat,dat_add)
+    # print(
+    #   list(n_stg=i,
+    #        S_t=S_t,
+    #        CI=S_t +qnorm(c(0.025,0.975)) * sqrt(S_t * (1-S_t) / nsim)
+    #        )
+    # )
+  }
 }
-hist(t1e.dat[which(t1e.dat$flag==1),"alpha.fin"])
-hist(t1e.dat[which(t1e.dat$flag==1),"S_t"])
-
-summary(t1e.dat[which(t1e.dat$flag==1),"S_t"])
-summary(t1e.dat[,"S_t"])#mean t1e is a little high
-
-summary(t1e.dat[which(t1e.dat$flag==1),"alpha.fin"]);#mean alpha.final adjusted
+if(i %%10 ==0){
+  print(paste("nsim",i/5,"%"))}
+}
+hist(t1e.dat[,"alpha.fin"])
+summary(t1e.dat[,"S_t"])
 summary(t1e.dat[,"alpha.fin"]);#mean alpha.final adjusted
 
-mean(t1e.dat[which(t1e.dat$flag==1),"S_t"])+qnorm(c(0.025,0.975)) * sqrt(var(t1e.dat[which(t1e.dat$flag==1),"S_t"])) #95% CI of t1e is a little high
-
 #set alpha.fin to mean from above
-new.alpha.fin<-round(median(t1e.dat[which(t1e.dat$flag==1),"alpha.fin"]),3); #median alpha.final adjusted: 0.0376
+new.alpha.fin<-round(mean(t1e.dat[,"alpha.fin"]),3); #median alpha.final adjusted: 0.033
 sim<-trial_sim_2stg(nsim,66,66,assumed_pA,assumed_pA,alpha_int,new.alpha.fin) #run sim
 check.t1e<-mean(sim$decision, na.rm = T) #check t1e
 round(mean(check.t1e)+qnorm(c(0.025,0.5,0.975)) * sqrt(check.t1e*(1-check.t1e)/nsim),4) #95% CI of t1e is a little high
@@ -128,7 +123,8 @@ round(mean(check.t1e)+qnorm(c(0.025,0.5,0.975)) * sqrt(check.t1e*(1-check.t1e)/n
 #####What n_stage do we need to achieve:t1e~0.05, pwr~0.8, pr_stop>0.40 ?#####
 n.new<-data.frame(nsim=numeric(0),n_stg=numeric(0),S_t=numeric(0),t1e=numeric(0),
                   pr_stop=numeric(0),flag=numeric(0))
-for (i in 66:70){
+for (j in 1:100){
+for (i in 65:70){
     check.pwr<-trial_sim_2stg(nsim,i,i,assumed_pA,assumed_pB,alpha_int,new.alpha.fin)
     check.t1e<-trial_sim_2stg(nsim,i,i,assumed_pA,assumed_pA,alpha_int,new.alpha.fin)
     S_t <-mean(check.pwr$decision)#power     
@@ -146,13 +142,16 @@ for (i in 66:70){
       # )
        break
      }
-  }
-(n.new$S_t)
-(n.new$t1e);
-(n.new$pr_stop);
-(n.new$n_stg);#68
+}
+  if(j %%10 ==0){
+    print(paste("nsim",j,"%"))}
+}
+summary(n.new$S_t)
+summary(n.new$t1e);
+summary(n.new$pr_stop);
+summary(n.new$n_stg);#66
 
-n_stg<-(n.new$n_stg)
+n_stg<-round(mean(n.new$n_stg),0)
 
 check.pwr<-trial_sim_2stg(nsim,n_stg,n_stg,assumed_pA,assumed_pB,alpha_int,new.alpha.fin)
 S_t <-mean(check.pwr$decision)#power     
@@ -163,9 +162,7 @@ pr_st+qnorm(c(0.5,0.025,0.975)) * sqrt(pr_st * (1-pr_st) / nsim)
 
 #Expected N:
 Expect_HA<- (n_stg*2)* pr_st + (n_stg*4)*(1-pr_st)
-sd_Ha<-(n_stg*2) * sqrt(pr_st*(1-pr_st)/nsim)
-round(Expect_HA+qnorm(c(0.025,0.5,0.975))*sd_Ha,0)
-
+Expect_HA
 #
 check.alp<-trial_sim_2stg(nsim,n_stg,n_stg,assumed_pA,assumed_pA,alpha_int,new.alpha.fin)
 t1e <-mean(check.alp$decision, na.rm = T)#t1e
@@ -176,13 +173,10 @@ pr_stop+qnorm(c(0.5, 0.025,0.975)) * sqrt(pr_stop * (1-pr_stop) / nsim)
 
 #Expected N:
 Expect_H0<- (n_stg*2)* pr_stop + (n_stg*4)*(1-pr_stop)
-sd_H0<-(n_stg*2) * sqrt(pr_stop*(1-pr_stop)/nsim)
-
-round(Expect_H0+qnorm(c(0.025,0.5,0.975))*sd_H0,0)
-
+Expect_H0
 #####FINAL VALUES#####
 alpha_int #interim alpha threshold: 0.02
-new.alpha.fin #final alpha threshold: 0.0375
+new.alpha.fin #final alpha threshold: 0.036
 
 n_stg #n/4
 4*n_stg #max n: 272, blocks of size 2,4,8,34
@@ -193,31 +187,14 @@ blockrand(n=136, num.levels = 2, block.sizes = c(1:4), levels=c("SOC","EXP"))
 
 #####Different scenarios:Null's#####
 #1----
-pA=0.10
-check.alp<-trial_sim_2stg(nsim,n_stg,n_stg,pA,pA,alpha_int,new.alpha.fin)
-t1e<-mean(check.alp$decision)
-t1e+qnorm(c(0.5,0.025,0.975)) * sqrt(t1e * (1-t1e) / nsim)
 
 #2----
-pA=0.05
-check.alp<-trial_sim_2stg(nsim,n_stg,n_stg,pA,pA,alpha_int,new.alpha.fin)
-t1e<-mean(check.alp$decision)
-t1e+qnorm(c(0.5,0.025,0.975)) * sqrt(t1e * (1-t1e) / nsim)
+
 
 #####Different scenarios:Non Null's#####
 #1----
-pA=0.05
-pB=0.20
-check.pwr<-trial_sim_2stg(nsim,n_stg,n_stg,pA,pB,alpha_int,new.alpha.fin)
-power<-mean(check.pwr$decision)
 
-power+qnorm(c(0.5,0.025,0.975)) * sqrt(power * (1-power) / nsim)
 #2----
-pA=0.10
-pB=0.25
-check.pwr<-trial_sim_2stg(nsim,n_stg,n_stg,pA,pB,alpha_int,new.alpha.fin)
-power<-mean(check.pwr$decision)
 
-power+qnorm(c(0.5,0.025,0.975)) * sqrt(power * (1-power) / nsim)
 
 #####Different scenarios:Additional#####

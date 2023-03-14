@@ -12,15 +12,15 @@ trial_sim_2stg <- function(n_sim, #number of simulations
     rbinom(n_sim, n_A, pA) / n_A; #stage 1, arm A
   stg1_data_B <-
     rbinom(n_sim, n_B, pB) / n_B;#stage 1, arm B
-  stg1_all<- (stg1_data_A*n_A+stg1_data_B*n_B) / (n_A+n_B); #all stage 1
+  stg1_sigma<- sqrt((stg1_data_A*(1-stg1_data_A)) / (n_A) +
+                      (stg1_data_B*(1-stg1_data_B))/(n_B)); #all stage 1
   # estimated_sigmasq_A <- stg1_data_A * (1 -  stg1_data_A);
   # estimated_sigmasq_B <- stg1_data_B * (1 -  stg1_data_B);
   # t_stat <-
   #   (stg1_data_A - stg1_data_B) / 
   #   sqrt(estimated_sigmasq_A / n_A + estimated_sigmasq_B / n_B);
   z_stat <-
-    (stg1_data_A - stg1_data_B) / 
-    sqrt(stg1_all*(1-stg1_all)*(1 / n_A + 1 / n_B)); #stg 1 test stat (Z)
+    (stg1_data_A - stg1_data_B) / stg1_sigma; #stg 1 test stat (Z)
   # df_approx <- 
   #   (estimated_sigmasq_A/n_A + estimated_sigmasq_B/n_B)^2 / 
   #   ((estimated_sigmasq_A/n_A)^2/(n_A-1) + 
@@ -33,9 +33,10 @@ trial_sim_2stg <- function(n_sim, #number of simulations
   
   stg2_data_B <- (stg1_data_B*n_B+rbinom(n_sim, n_B, pB))/(2*n_B);#if there is a stage 2, arm A
   stg2_data_A <- (stg1_data_A*n_A+rbinom(n_sim, n_A, pA))/(2*n_A);#if there is a stage 2, arm A
-  stg2_all<-(stg2_data_B*2*n_B+stg2_data_A*2*n_A)/(2*n_A+2*n_B);
-  estimated_sigmasq_A2 <- stg2_data_A * (1 -  stg2_data_A);
-  estimated_sigmasq_B2 <- stg2_data_B * (1 -  stg2_data_B);
+  stg2_sigma<- sqrt((stg2_data_A*(1-stg2_data_A)) / (2*n_A) +
+                      (stg2_data_B*(1-stg2_data_B))/(2*n_B)); #all stage 1
+  # estimated_sigmasq_A2 <- stg2_data_A * (1 -  stg2_data_A);
+  # estimated_sigmasq_B2 <- stg2_data_B * (1 -  stg2_data_B);
     # t_stat_2 <-
     #   (stg2_data_A - stg2_data_B) / 
     #   sqrt(estimated_sigmasq_A2 / (2*n_A) + estimated_sigmasq_B2 / (2*n_B));
@@ -44,8 +45,7 @@ trial_sim_2stg <- function(n_sim, #number of simulations
     #   ((estimated_sigmasq_A2/(2*n_A))^2/((2*n_A)-1) + 
     #      (estimated_sigmasq_B2/(2*n_B))^2/((2*n_B)-1));
   z_stat_2 <-
-    (stg2_data_A - stg2_data_B) / 
-    sqrt(stg2_all*(1-stg2_all)*(1 /(2*n_A) + 1 /(2*n_B)));
+    (stg2_data_A - stg2_data_B) / stg2_sigma
     # pvalues_stg2_t = 2 * pt(q = abs(t_stat_2), 
     #                         df = df_approx_2, 
     #                         lower.tail = FALSE)
